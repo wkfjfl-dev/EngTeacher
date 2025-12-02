@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고3 행동발달 및 특성 생성 도우미</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- 헤더 -->
+    <header class="bg-indigo-600 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-graduation-cap text-2xl"></i>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">EduNote AI Assistant</h1>
+                    <p class="text-xs text-indigo-200">고3 행동발달 및 특성 기록 생성기</p>
+                </div>
+            </div>
+            <button onclick="window.location.reload()" class="text-indigo-100 hover:text-white transition">
+                <i class="fa-solid fa-rotate-right"></i> 초기화
+            </button>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="flex-grow w-full max-w-6xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- 왼쪽 패널: 입력 및 설정 (LG 기준 7칸) -->
+        <section class="lg:col-span-7 space-y-6">
+            
+            <!-- 학생 기본 정보 -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 fade-in">
+                <h2 class="text-lg font-bold text-slate-700 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-user-pen text-indigo-500"></i> 학생 정보 및 관찰
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-500 mb-1">학생 이름</label>
+                        <input type="text" id="studentName" placeholder="예: 홍길동" class="w-full rounded-lg border-slate-300 border p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-500 mb-1">핵심 성향 (자동 추천)</label>
+                        <select id="mainTrait" class="w-full rounded-lg border-slate-300 border p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                            <option value="general">일반/종합</option>
+                            <option value="leadership">리더십/통솔력</option>
+                            <option value="diligence">성실/책임감</option>
+                            <option value="social">배려/협동심</option>
+                            <option value="academic">학업의지/탐구</option>
+                            <option value="creative">창의/예술성</option>
+                            <!-- 추가된 성향 -->
+                            <option value="challenge">도전정신/개척</option>
+                            <option value="communication">소통/중재능력</option>
+                            <option value="positivity">긍정/에너지</option>
+                            <option value="analytical">분석/논리성</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 키워드 선택 (태그) -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-500 mb-2">행동 특성 키워드 (다중 선택 시 내용이 풍부해집니다)</label>
+                    <div id="keywordContainer" class="flex flex-wrap gap-2">
+                        <!-- JS로 동적 생성됨 -->
+                    </div>
+                </div>
+
+                <!-- 선생님 관찰 노트 -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-500 mb-1">
+                        선생님 관찰 메모 <span class="text-xs text-indigo-500 font-normal">(구어체로 작성해도 생기부 어투로 변환됩니다)</span>
+                    </label>
+                    <textarea id="observationInput" rows="3" class="w-full rounded-lg border-slate-300 border p-3 focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="예: 점심시간마다 친구들의 고민을 잘 들어주고, 축제 때 반 전체 의견을 잘 조율했음."></textarea>
+                </div>
+            </div>
+
+            <!-- 생성 버튼 -->
+            <button onclick="generateReport()" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transform transition hover:-translate-y-1 active:scale-95 flex justify-center items-center gap-2 text-lg">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> 1300바이트 분량 자동 생성
+            </button>
+
+            <!-- 결과 승인 목록 -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 fade-in hidden" id="savedListSection">
+                <h3 class="text-md font-bold text-slate-700 mb-3">작성 완료 목록</h3>
+                <div id="savedList" class="space-y-3 max-h-60 overflow-y-auto pr-2">
+                    <!-- 저장된 항목이 여기에 추가됨 -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 오른쪽 패널: 결과 및 편집 (LG 기준 5칸) -->
+        <section class="lg:col-span-5 space-y-6">
+            
+            <!-- 결과 미리보기 카드 -->
+            <div class="bg-white rounded-xl shadow-md border-t-4 border-indigo-500 p-6 sticky top-24 fade-in h-fit">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-slate-800">
+                        <i class="fa-solid fa-file-lines text-indigo-500 mr-1"></i> 생성 결과
+                    </h2>
+                    <span id="charCount" class="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-500">0 / 1500 bytes</span>
+                </div>
+
+                <!-- 에디터 영역 -->
+                <div class="relative">
+                    <textarea id="resultOutput" class="w-full h-80 p-4 bg-slate-50 border border-slate-200 rounded-lg text-sm leading-relaxed text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition resize-none" placeholder="왼쪽에서 정보를 입력하고 생성 버튼을 누르면, 이곳에 완성된 생기부 문구가 나타납니다."></textarea>
+                    
+                    <!-- 툴팁/도움말 -->
+                    <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 pointer-events-none">
+                        <i class="fa-regular fa-keyboard text-3xl mb-2"></i>
+                        <p class="text-sm">데이터 입력 대기 중...</p>
+                    </div>
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <button onclick="copyToClipboard()" class="flex items-center justify-center gap-2 bg-white border border-slate-300 text-slate-700 py-2.5 rounded-lg hover:bg-slate-50 transition font-medium">
+                        <i class="fa-regular fa-copy"></i> 복사하기
+                    </button>
+                    <button onclick="saveToList()" class="flex items-center justify-center gap-2 bg-indigo-50 text-indigo-700 py-2.5 rounded-lg hover:bg-indigo-100 transition font-medium">
+                        <i class="fa-solid fa-check"></i> 저장/승인
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- 토스트 알림 메시지 -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toastMessage">알림 메시지</span>
+    </div>
+
+    <!-- JavaScript 로직 -->
+    <script>
+        // --- 1. 데이터 베이스 (키워드 및 문구 템플릿) ---
+        const TRAIT_DATA = {
+            keywords: [
+                { id: 'leader', label: '리더십', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+                { id: 'comm', label: '의사소통', color: 'bg-green-100 text-green-700 border-green-200' },
+                { id: 'active', label: '적극성', color: 'bg-red-100 text-red-700 border-red-200' },
+                { id: 'care', label: '배려/나눔', color: 'bg-orange-100 text-orange-700 border-orange-200' },
+                { id: 'rule', label: '규칙준수', color: 'bg-purple-100 text-purple-700 border-purple-200' },
+                { id: 'self', label: '자기주도', color: 'bg-teal-100 text-teal-700 border-teal-200' },
+                { id: 'prob', label: '문제해결', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+                { id: 'posi', label: '긍정/활기', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+                { id: 'logic', label: '논리적사고', color: 'bg-cyan-100 text-cyan-700 border-cyan-200' }
+            ],
+            // 키워드별 상세 문장 (분량 확보용)
+            keywordContent: {
+                leader: [
+                    "학급 임원 활동을 수행하며 전체의 의견을 수렴하고 조율하는 과정에서 탁월한 지도력을 발휘함.",
+                    "구성원 개개인의 장점을 파악하여 적재적소에 역할을 부여함으로써 팀워크를 극대화하는 능력이 있음.",
+                    "리더로서 솔선수범하는 자세를 보여 친구들의 두터운 신망을 얻었으며 학급 분위기를 주도함."
+                ],
+                comm: [
+                    "자신의 의견을 명확하게 전달하면서도 상대방의 감정을 상하게 하지 않는 세련된 화법을 구사함.",
+                    "토론 활동 시 경청하는 자세를 바탕으로 상대방의 논리를 존중하며 건설적인 방향으로 대화를 이끌어감.",
+                    "친구들 사이의 오해나 갈등이 발생했을 때 중간에서 대화를 유도하여 원만하게 해결하는 중재자 역할을 수행함."
+                ],
+                active: [
+                    "매사 적극적인 태도로 학교 행사에 참여하여 학급의 단합을 도모하는 데 앞장섬.",
+                    "수업 시간 발표나 질의응답에 주도적으로 참여하며 학습 분위기를 조성하는 데 기여함.",
+                    "새로운 과제나 활동에 망설임 없이 도전하여 성취해내는 실행력이 돋보이는 학생임."
+                ],
+                care: [
+                    "도움이 필요한 친구를 지나치지 않고 먼저 손을 내미는 따뜻한 마음씨를 지님.",
+                    "학급 내 소외되는 친구가 없도록 세심하게 살피며 모두가 어울릴 수 있는 분위기를 만듦.",
+                    "점심시간이나 쉬는 시간에 궂은일을 도맡아 하며 친구들을 위한 봉사를 실천함."
+                ],
+                rule: [
+                    "교칙과 학급 규칙을 철저히 준수하며 다른 학생들에게 모범이 되는 바른 생활 태도를 가짐.",
+                    "공동체 생활에서 지켜야 할 예절을 중시하며 선생님과 친구들에게 항상 예의 바르게 행동함.",
+                    "자신의 행동에 책임을 질 줄 아는 성숙한 자세로 학교 생활에 임하여 신뢰를 받음."
+                ],
+                self: [
+                    "스스로 학습 목표를 설정하고 이를 달성하기 위해 꾸준히 노력하는 자기주도적 학습 능력이 뛰어남.",
+                    "자신의 진로와 관련된 활동을 스스로 찾아 계획하고 실행에 옮기는 추진력을 보여줌.",
+                    "시간 관리 능력이 철저하여 학업과 교내 활동의 균형을 잘 유지하며 생활함."
+                ],
+                prob: [
+                    "예상치 못한 문제가 발생했을 때 당황하지 않고 침착하게 원인을 분석하여 해결책을 제시함.",
+                    "창의적인 아이디어를 통해 기존의 비효율적인 방식을 개선하고 대안을 마련하는 능력이 있음.",
+                    "복잡한 상황 속에서도 핵심을 파악하여 실질적인 결과를 도출해내는 역량이 탁월함."
+                ],
+                posi: [
+                    "특유의 밝은 에너지로 주변 사람들에게 활력을 불어넣으며 학급의 분위기 메이커 역할을 함.",
+                    "힘든 상황에서도 긍정적인 면을 보려고 노력하며 친구들에게 위로와 용기를 주는 존재임.",
+                    "실패를 두려워하기보다 배움의 기회로 삼는 낙관적인 태도를 지녀 발전 가능성이 높음."
+                ],
+                logic: [
+                    "현상에 대해 논리적으로 접근하고 분석하여 객관적인 결론을 도출하는 능력이 우수함.",
+                    "자신의 주장에 대해 타당한 근거를 제시하여 설득력 있게 전달하는 논리적 사고력을 갖춤.",
+                    "정보를 비판적으로 수용하고 체계적으로 정리하여 활용하는 정보 처리 역량이 뛰어남."
+                ]
+            },
+            // 각 성향별 오프닝/바디/클로징 멘트 뱅크
+            templates: {
+                leadership: {
+                    open: [
+                        "책임감이 강하고 통솔력이 뛰어나 학급의 중심 역할을 수행하는 학생임.",
+                        "공동체의 목표 달성을 위해 헌신하며 탁월한 리더십을 발휘하는 인재임.",
+                        "민주적인 소통 방식을 통해 구성원들의 화합을 이끌어내는 능력이 돋보임."
+                    ],
+                    body: [
+                        "학급 회의를 진행할 때 소수 의견도 존중하며 합리적인 의사결정을 이끌어내는 역량이 탁월하고,",
+                        "단체 활동에서 발생할 수 있는 갈등 상황을 유연하게 조정하여 팀워크를 강화하는 데 기여하며,",
+                        "자신의 편의보다 학급 전체의 이익을 우선시하는 태도로 친구들의 신뢰를 얻고 있으며,"
+                    ],
+                    close: [
+                        "이러한 리더십 경험을 바탕으로 향후 어떤 조직에서든 중추적인 역할을 할 것으로 기대됨.",
+                        "타인을 포용하고 이끄는 서번트 리더로서의 자질을 갖추어 미래가 더욱 기대되는 학생임.",
+                        "뛰어난 지도력과 인성을 겸비하여 사회에 긍정적인 영향을 미치는 리더로 성장할 것임."
+                    ]
+                },
+                diligence: {
+                    open: [
+                        "근면 성실한 태도로 학교 생활 전반에 걸쳐 타의 모범이 되는 학생임.",
+                        "주어진 일에 책임감을 가지고 끝까지 완수하는 끈기가 돋보이는 학생임.",
+                        "꾸준한 노력과 성실함을 바탕으로 안정적인 학교 생활을 영위하고 있음."
+                    ],
+                    body: [
+                        "매일 아침 일찍 등교하여 차분하게 하루를 준비하는 등 자기 관리가 철저하며,",
+                        "사소한 약속이나 규칙이라도 소홀히 하지 않고 반드시 지키려는 태도를 일관되게 보여주며,",
+                        "어려운 과제가 주어져도 불평 없이 묵묵히 수행하여 높은 완성도의 결과물을 만들어내고,"
+                    ],
+                    close: [
+                        "이러한 성실함은 대학 진학 후 학문 탐구에 있어서도 큰 밑거름이 될 것임.",
+                        "기본이 바로 선 인재로서 어디서든 자신의 몫을 훌륭히 해낼 것으로 확신함.",
+                        "성실함이라는 강력한 무기를 바탕으로 꾸준히 성장해 나가는 모습이 인상적임."
+                    ]
+                },
+                social: {
+                    open: [
+                        "타인을 먼저 배려하는 따뜻한 심성을 지녀 교우 관계가 매우 원만함.",
+                        "이타적인 태도와 봉사 정신으로 학급의 긍정적인 분위기를 주도함.",
+                        "공감 능력이 뛰어나 친구들의 마음을 잘 헤아리고 보듬어주는 학생임."
+                    ],
+                    body: [
+                        "학급 내 소외되는 친구가 없도록 먼저 다가가 말을 건네고 어울리도록 유도하며,",
+                        "자신의 이익보다는 친구들의 편의를 위해 양보하고 배려하는 성숙한 태도를 보이고,",
+                        "학급 환경 미화나 정리 정돈 등 남들이 기피하는 일에도 자발적으로 나서서 봉사하며,"
+                    ],
+                    close: [
+                        "투철한 공동체 의식과 따뜻한 인성은 사회에 나가서도 빛을 발할 것으로 보임.",
+                        "나눔과 배려를 실천하는 자세는 타인에게 귀감이 되며 훌륭한 사회 구성원으로 성장할 것임.",
+                        "사람을 소중히 여기는 마음가짐을 바탕으로 주변을 밝게 비추는 인재가 될 것임."
+                    ]
+                },
+                academic: {
+                    open: [
+                        "학업에 대한 열정이 남다르며 깊이 있는 탐구 자세를 갖춘 학생임.",
+                        "지적 호기심이 풍부하고 자기주도적인 학습 능력이 매우 우수함.",
+                        "배움에 대한 진지한 태도와 끊임없이 노력하는 모습이 인상적인 학구파임."
+                    ],
+                    body: [
+                        "수업 시간에 높은 집중력을 발휘하여 교과 내용을 심도 있게 이해하려고 노력하며,",
+                        "교과서 밖의 지식까지 확장하여 탐구하려는 지적 욕구가 강해 관련 도서를 찾아 읽거나 질문하고,",
+                        "단순 암기보다는 원리와 개념을 이해하는 데 중점을 두어 논리적으로 사고하는 습관이 형성되어 있으며,"
+                    ],
+                    close: [
+                        "심도 있는 학문 탐구 능력은 향후 대학에서의 연구 활동에도 큰 강점이 될 것임.",
+                        "지적 성장에 대한 끊임없는 열정으로 자신의 분야에서 전문성을 갖춘 인재로 성장할 것임.",
+                        "탁월한 학습 역량과 탐구 정신을 바탕으로 학문적 성취를 이룰 잠재력이 큼."
+                    ]
+                },
+                creative: {
+                    open: [
+                        "풍부한 상상력과 창의적인 사고를 바탕으로 독창적인 아이디어를 제시함.",
+                        "기존의 관습에 얽매이지 않고 새로운 관점에서 문제를 바라보는 시각을 지님.",
+                        "예술적 감수성과 창의력이 뛰어나 다양한 활동에서 개성을 드러냄."
+                    ],
+                    body: [
+                        "정형화된 방식보다는 자신만의 독특한 해결책을 모색하여 친구들에게 신선한 자극을 주며,",
+                        "다양한 분야의 지식을 융합하여 새로운 가치를 창출해내는 융합적 사고 능력이 돋보이고,",
+                        "자신의 생각과 감정을 글, 그림, 활동 등으로 표현하는 데 있어 탁월한 재능을 발휘하며,"
+                    ],
+                    close: [
+                        "창의적이고 유연한 사고방식은 급변하는 미래 사회에 적합한 인재상임.",
+                        "자신만의 색깔을 가지고 세상을 변화시킬 수 있는 잠재력을 가진 학생으로 기대됨.",
+                        "독창성과 개성을 바탕으로 문화 예술 및 창의적인 분야에서 두각을 나타낼 것임."
+                    ]
+                },
+                challenge: {
+                    open: ["새로운 분야에 대한 호기심이 많고 실패를 두려워하지 않는 강인한 도전 정신을 지님.", "현실에 안주하기보다 끊임없이 자신의 한계를 시험하며 성장하려는 진취적인 학생임."],
+                    body: ["낯선 과제나 어려운 상황에 직면해도 주저하지 않고 적극적으로 뛰어들어 해결책을 모색하며,", "한 번 시작한 일은 끝까지 해내려는 끈기와 열정을 가지고 목표를 향해 정진하고,", "실패를 겪더라도 좌절하기보다는 원인을 분석하고 다시 도전하는 회복 탄력성이 뛰어나며,"],
+                    close: ["이러한 불굴의 도전 정신은 미래 사회를 이끌어갈 강력한 원동력이 될 것임.", "개척 정신을 바탕으로 자신의 분야에서 선구자적 역할을 수행할 것으로 기대됨.", "어려움을 극복하고 성취를 이뤄내는 과정에서 큰 성장을 이룰 학생임."]
+                },
+                communication: {
+                    open: ["타인의 의견을 경청하고 공감하며 자신의 생각을 논리적으로 전달하는 소통 능력이 탁월함.", "갈등 상황에서 양보와 타협을 통해 합리적인 결론을 도출해내는 중재 능력을 갖춤."],
+                    body: ["친구들 간의 의견 대립이 있을 때 양쪽의 입장을 충분히 듣고 절충안을 제시하여 화해를 이끌어내며,", "자신의 주장을 강요하기보다 대화와 설득을 통해 민주적인 의사결정 과정을 주도하고,", "비언어적인 소통 능력 또한 뛰어나 상대방의 감정 변화를 잘 읽고 적절하게 반응하며,"],
+                    close: ["뛰어난 의사소통 역량은 향후 어떤 조직에서든 구성원들을 하나로 묶는 접착제 역할을 할 것임.", "소통과 공감을 중시하는 성숙한 시민의식을 바탕으로 사회적 리더로 성장할 가능성이 큼.", "원만한 대인 관계 능력은 미래 사회의 복잡한 문제를 해결하는 데 큰 자산이 될 것임."]
+                },
+                positivity: {
+                    open: ["항상 밝은 미소와 긍정적인 태도로 주변 사람들에게 즐거움과 활력을 주는 학생임.", "특유의 유머 감각과 친화력으로 학급 분위기를 부드럽게 만드는 분위기 메이커임."],
+                    body: ["힘든 상황에서도 불평하기보다 긍정적인 면을 찾아내어 친구들을 독려하고 사기를 북돋아 주며,", "에너지 넘치는 모습으로 학급 행사나 체육 활동에 앞장서서 참여하여 단합을 이끌어내고,", "친구들의 장점을 찾아 칭찬하고 격려하는 긍정적인 언어 습관을 가지고 있어 인기가 많으며,"],
+                    close: ["긍정적인 마인드는 인생의 시련을 극복하고 행복한 삶을 영위하는 큰 자산이 될 것임.", "주변을 밝게 만드는 해피바이러스와 같은 존재로, 사회에 나가서도 사랑받는 인재가 될 것임.", "어떤 상황에서도 희망을 잃지 않는 태도는 주변 사람들에게도 선한 영향력을 미칠 것임."]
+                },
+                analytical: {
+                    open: ["현상을 논리적으로 분석하고 인과관계를 명확히 파악하는 비판적 사고력이 뛰어난 학생임.", "감정보다는 객관적인 데이터와 사실을 바탕으로 합리적인 판단을 내리는 신중함을 갖춤."],
+                    body: ["토론이나 발표 활동에서 명확한 근거와 논리를 들어 자신의 주장을 설득력 있게 펼치며,", "복잡한 문제 상황을 다각도로 분석하여 실질적이고 효율적인 해결 방안을 제시하는 능력이 있고,", "정보의 홍수 속에서 필요한 정보를 선별하고 체계적으로 정리하여 활용하는 정보 처리 역량이 우수하며,"],
+                    close: ["냉철한 분석력과 통찰력은 학문 연구나 전문 분야에서 크게 빛을 발할 것으로 기대됨.", "논리적 사고를 바탕으로 문제의 본질을 꿰뚫어 보는 안목이 탁월하여 미래가 촉망됨.", "지성적인 태도와 합리적인 사고방식은 사회 발전에 기여하는 지식인으로 성장하게 할 것임."]
+                },
+                general: { // 기본값
+                    open: ["밝고 긍정적인 에너지로 학교 생활에 적극적으로 임하며 교우 관계가 원만한 학생임.", "성실하고 예의 바른 태도로 선생님과 친구들에게 신뢰를 받는 모범적인 학생임."],
+                    body: ["자신의 역할을 충실히 수행하며 학교의 다양한 행사에 흥미를 가지고 참여하고,", "일상 생활에서 규칙을 잘 지키고 주변 사람들을 배려하는 성숙한 시민 의식을 보여주며,", "학업과 교내 활동의 균형을 유지하며 건강하고 즐거운 학교 생활을 영위하고 있고,"],
+                    close: ["앞으로의 성장이 더욱 기대되며 바른 인성을 갖춘 사회 구성원으로 발전하고 있음.", "학교 생활을 통해 보여준 긍정적인 변화는 훌륭한 성인으로 성장하는 밑거름이 될 것임.", "자신의 꿈을 향해 꾸준히 노력하는 모습이 아름다운 학생임."]
+                }
+            }
+        };
+
+        // 선택된 키워드 관리 Set
+        let selectedKeywords = new Set();
+
+        // --- 2. 초기화 및 UI 렌더링 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderKeywords();
+            
+            // 텍스트 영역 글자수 카운팅
+            const outputArea = document.getElementById('resultOutput');
+            outputArea.addEventListener('input', () => {
+                updateCharCount(outputArea.value);
+                toggleEmptyState(outputArea.value);
+            });
+        });
+
+        function renderKeywords() {
+            const container = document.getElementById('keywordContainer');
+            container.innerHTML = TRAIT_DATA.keywords.map(kw => `
+                <button 
+                    onclick="toggleKeyword('${kw.id}', this)"
+                    class="keyword-btn px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 bg-white text-slate-500 border-slate-300 hover:bg-slate-50"
+                    data-id="${kw.id}"
+                    data-active-class="${kw.color}"
+                >
+                    #${kw.label}
+                </button>
+            `).join('');
+        }
+
+        function toggleKeyword(id, btn) {
+            const activeClass = btn.dataset.activeClass.split(' ');
+            
+            if (selectedKeywords.has(id)) {
+                selectedKeywords.delete(id);
+                btn.classList.remove(...activeClass, 'ring-2', 'ring-offset-1');
+                btn.classList.add('bg-white', 'text-slate-500', 'border-slate-300');
+            } else {
+                selectedKeywords.add(id);
+                btn.classList.remove('bg-white', 'text-slate-500', 'border-slate-300');
+                btn.classList.add(...activeClass, 'ring-2', 'ring-offset-1');
+            }
+        }
+
+        // --- 3. 핵심 로직: 생기부 자동 생성 (1300바이트 목표) ---
+        function generateReport() {
+            const name = document.getElementById('studentName').value.trim();
+            const traitType = document.getElementById('mainTrait').value;
+            const observation = document.getElementById('observationInput').value.trim();
+            
+            // 유효성 검사 (입력이 너무 없으면 경고)
+            if (!name && !observation && selectedKeywords.size === 0) {
+                showToast("풍성한 내용을 위해 학생 이름, 키워드, 관찰 내용을 입력해주세요.", "error");
+                return;
+            }
+
+            const tmpl = TRAIT_DATA.templates[traitType] || TRAIT_DATA.templates.general;
+            
+            // 문구 조합 시작 (목표: 약 1300바이트 내외)
+            let sections = [];
+
+            // 1. [도입부] 성향 기반 오프닝 (2문장) - 랜덤하게 섞어서 중복 방지
+            let openSentences = shuffleArray([...tmpl.open]);
+            sections.push(openSentences.slice(0, 2).join(' '));
+
+            // 2. [상세 서술 1] 선택된 키워드 기반 문장 확장
+            // 선택된 키워드가 있으면 해당 키워드의 문장을 가져오고, 없으면 일반 성향 내용으로 채움
+            if (selectedKeywords.size > 0) {
+                let kwSentences = [];
+                selectedKeywords.forEach(kwId => {
+                    const content = TRAIT_DATA.keywordContent[kwId];
+                    if (content) {
+                        kwSentences.push(getRandom(content)); // 각 키워드당 1문장씩 추출
+                    }
+                });
+                sections.push(kwSentences.join(' '));
+            }
+
+            // 3. [상세 서술 2] 성향 기반 본문 심화 (3문장)
+            // 키워드 문장이 적을 경우 본문 내용을 더 많이 추가하여 분량 확보
+            let bodySentences = shuffleArray([...tmpl.body]);
+            const bodyCount = selectedKeywords.size < 3 ? 3 : 2; // 키워드가 적으면 본문을 3개, 많으면 2개
+            sections.push(bodySentences.slice(0, bodyCount).join(' '));
+
+            // 4. [선생님 관찰] 자연어 처리 및 연결
+            if (observation) {
+                let polishedObs = polishSentence(observation);
+                sections.push(polishedObs);
+            }
+
+            // 5. [마무리] 성향 기반 클로징 (2문장)
+            let closeSentences = shuffleArray([...tmpl.close]);
+            sections.push(closeSentences.slice(0, 2).join(' '));
+
+            // 최종 조립
+            let resultText = sections.filter(s => s.length > 0).join(' ');
+
+            // 결과 출력
+            const outputBox = document.getElementById('resultOutput');
+            outputBox.value = resultText;
+            
+            // UI 업데이트
+            toggleEmptyState(resultText);
+            updateCharCount(resultText);
+            
+            if(window.innerWidth < 1024) {
+                outputBox.scrollIntoView({behavior: "smooth"});
+            }
+
+            // 분량이 1000바이트 미만이면 알림으로 안내
+            if (getByteLength(resultText) < 1000) {
+                showToast("더 긴 내용을 원하시면 키워드를 추가하거나 관찰 내용을 더 적어보세요.");
+            } else {
+                showToast("풍성한 생기부 초안이 생성되었습니다.");
+            }
+        }
+
+        // 헬퍼 함수: 배열에서 랜덤 요소 1개 추출
+        function getRandom(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        // 헬퍼 함수: 배열 섞기 (Fisher-Yates Shuffle) - 중복 없이 여러 문장 뽑을 때 사용
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 헬퍼 함수: 평어체 -> 생기부체 변환
+        function polishSentence(text) {
+            let refined = text;
+            
+            // 구어체 어미 제거 및 표준 어미 부착
+            const replacements = [
+                { target: /합니다\./g, replace: "함." },
+                { target: /했어요\./g, replace: "하였음." },
+                { target: /좋습니다\./g, replace: "우수함." },
+                { target: /도와줬음/g, replace: "도움을 주었으며" },
+                { target: /잘함/g, replace: "능숙하게 수행함" },
+                { target: /있음/g, replace: "있음" },
+                { target: /참여함/g, replace: "적극적으로 참여하였으며" },
+                { target: /노력함/g, replace: "꾸준히 노력하는 모습을 보임" }
+            ];
+
+            replacements.forEach(rule => {
+                refined = refined.replace(rule.target, rule.replace);
+            });
+
+            if (!refined.endsWith('.') && !refined.endsWith('임') && !refined.endsWith('함') && !refined.endsWith('봄') && !refined.endsWith('음')) {
+                refined += " 구체적인 행동 특성이 관찰됨.";
+            }
+            
+            return refined;
+        }
+
+        // --- 4. 유틸리티 기능 (복사, 저장, UI제어) ---
+        
+        function updateCharCount(text) {
+            const bytes = getByteLength(text);
+            document.getElementById('charCount').innerText = `${bytes} / 1500 bytes`;
+            
+            // 1500바이트 근접 시 색상 변경
+            const countElem = document.getElementById('charCount');
+            if (bytes > 1400) {
+                countElem.className = "text-xs font-mono bg-red-100 px-2 py-1 rounded text-red-600 font-bold";
+            } else if (bytes > 1000) {
+                countElem.className = "text-xs font-mono bg-green-100 px-2 py-1 rounded text-green-600 font-bold";
+            } else {
+                countElem.className = "text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-500";
+            }
+        }
+
+        function getByteLength(s) {
+            let b = 0, i = 0, c;
+            for (; c = s.charCodeAt(i++); b += c >> 11 ? 3 : c >> 7 ? 2 : 1);
+            return b;
+        }
+
+        function toggleEmptyState(val) {
+            const emptyState = document.getElementById('emptyState');
+            if (val.length > 0) {
+                emptyState.classList.add('hidden');
+            } else {
+                emptyState.classList.remove('hidden');
+            }
+        }
+
+        function copyToClipboard() {
+            const copyText = document.getElementById("resultOutput");
+            if (!copyText.value) return;
+            
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value).then(() => {
+                showToast("클립보드에 복사되었습니다!");
+            });
+        }
+
+        function saveToList() {
+            const name = document.getElementById('studentName').value || "이름 없음";
+            const content = document.getElementById('resultOutput').value;
+
+            if (!content) {
+                showToast("저장할 내용이 없습니다.", "error");
+                return;
+            }
+
+            const listSection = document.getElementById('savedListSection');
+            const list = document.getElementById('savedList');
+            
+            listSection.classList.remove('hidden');
+
+            const item = document.createElement('div');
+            item.className = "bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm hover:bg-slate-100 transition group";
+            item.innerHTML = `
+                <div class="flex justify-between items-start mb-1">
+                    <span class="font-bold text-indigo-700">${name}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <p class="text-slate-600 line-clamp-2">${content}</p>
+            `;
+            
+            list.prepend(item);
+            showToast(`${name} 학생의 기록이 저장되었습니다.`);
+        }
+
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            
+            toastMsg.innerText = message;
+            
+            if (type === "error") {
+                toast.querySelector('i').className = "fa-solid fa-circle-exclamation text-red-400";
+            } else {
+                toast.querySelector('i').className = "fa-solid fa-circle-check text-green-400";
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
